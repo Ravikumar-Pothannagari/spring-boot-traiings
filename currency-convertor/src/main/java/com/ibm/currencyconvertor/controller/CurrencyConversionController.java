@@ -17,6 +17,8 @@ import org.springframework.web.client.RestTemplate;
 
 import com.ibm.currencyconvertor.model.Currency;
 import com.ibm.currencyconvertor.service.CurrencyExchangeServiceProxy;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+
 
 /**
  * @author RavikumarPothannagar
@@ -32,6 +34,7 @@ public class CurrencyConversionController {
 	@Autowired
 	private CurrencyExchangeServiceProxy proxy;
 
+	@HystrixCommand(fallbackMethod = "convertCurrency_Fallback")
 	@GetMapping("/get/from/{from}/to/{to}/quantity/{quantity}")
 	public Currency convertCurrency(@PathVariable String from, @PathVariable String to,
 			@PathVariable BigDecimal quantity) {
@@ -52,6 +55,7 @@ public class CurrencyConversionController {
 		return conversionValueObj;
 	}
 
+	@HystrixCommand(fallbackMethod = "convertCurrencyFeign_Fallback")
 	@GetMapping("/get-feign/from/{from}/to/{to}/quantity/{quantity}")
 	public Currency convertCurrencyFeign(@PathVariable String from, @PathVariable String to,
 			@PathVariable BigDecimal quantity) {
@@ -63,6 +67,27 @@ public class CurrencyConversionController {
 				quantity.multiply(response.getFactorValue()), response.getPort());
 		logger.info(
 				"CurrencyConversionController->convertCurrencyFeign(@PathVariable String from, @PathVariable String to, @PathVariable BigDecimal quantity) -->END");
+		return conversionValueObj;
+	}
+	
+	public Currency convertCurrency_Fallback(@PathVariable String from, @PathVariable String to,
+			@PathVariable BigDecimal quantity) {
+		logger.info(
+				"CurrencyConversionController->convertCurrency_Fallback(@PathVariable String from, @PathVariable String to, @PathVariable BigDecimal quantity) -->START");
+		Currency conversionValueObj = new Currency();
+		logger.info(
+				"CurrencyConversionController->convertCurrency_Fallback(@PathVariable String from, @PathVariable String to, @PathVariable BigDecimal quantity) -->END");
+		return conversionValueObj;
+	}
+	
+	
+	public Currency convertCurrencyFeign_Fallback(@PathVariable String from, @PathVariable String to,
+			@PathVariable BigDecimal quantity) {
+		logger.info(
+				"CurrencyConversionController->convertCurrencyFeign(@PathVariable String from, @PathVariable String to, @PathVariable BigDecimal quantity) -->START");
+		Currency conversionValueObj = new Currency();
+		logger.info(
+				"CurrencyConversionController->convertCurrencyFeign_Fallback(@PathVariable String from, @PathVariable String to, @PathVariable BigDecimal quantity) -->END");
 		return conversionValueObj;
 	}
 
