@@ -3,6 +3,7 @@
  */
 package com.ibm.currencymanagerservice.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -70,6 +71,14 @@ public class CurrencyManagerServiceImpl implements CurrencyManagerService {
 		}
 		logger.info("CurrencyManagerServiceImpl->deleteConversionFactor(Long ID) -->START");
 		return true;
+	}
+
+	@Override
+	public List<Currency> findAll() {
+		logger.info("CurrencyManagerServiceImpl->findAll() -->START");
+		List<Currency> currencyList = repository.findAll();
+		logger.info("CurrencyManagerServiceImpl->findAll() -->END");
+		return currencyList;
 	}
 
 }

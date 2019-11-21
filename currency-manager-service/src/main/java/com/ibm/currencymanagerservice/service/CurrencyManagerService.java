@@ -1,5 +1,7 @@
 package com.ibm.currencymanagerservice.service;
 
+import java.util.List;
+
 import com.ibm.currencymanagerservice.model.Currency;
 
 /**
@@ -40,4 +42,11 @@ public interface CurrencyManagerService {
 	 * @return boolean
 	 */
 	boolean deleteConversionFactor(Long ID);
+
+	/**
+	 * This method is used to find all the Currency Conversion Factor details.
+	 * 
+	 * @return List<Currency>
+	 */
+	List<Currency> findAll();
 }
