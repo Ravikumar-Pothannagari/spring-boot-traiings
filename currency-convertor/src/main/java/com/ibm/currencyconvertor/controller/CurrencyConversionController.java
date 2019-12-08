@@ -7,6 +7,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +34,15 @@ public class CurrencyConversionController {
 
 	@Autowired
 	private CurrencyExchangeServiceProxy proxy;
+	
+	
+	
+	@Value("${CURENCY-MANAGER-SERVICE_SERVICE_HOST:184.173.5.222}")
+	private String curencyManagerServiceHost;
+	
+	@Value("${CURENCY-MANAGER-SERVICE_SERVICE_PORT:31708}")
+	private String curencyManagerServicePort;
+	
 
 	@HystrixCommand(fallbackMethod = "convertCurrency_Fallback")
 	@GetMapping("/get/from/{from}/to/{to}/quantity/{quantity}")
@@ -43,8 +53,10 @@ public class CurrencyConversionController {
 		Map<String, String> uriVariables = new HashMap<>();
 		uriVariables.put("from", from);
 		uriVariables.put("to", to);
+		/*ResponseEntity<Currency> responseEntity = new RestTemplate().getForEntity(
+				"http://localhost:8000/currency/retrieve/from/{from}/to/{to}", Currency.class, uriVariables);*/
 		ResponseEntity<Currency> responseEntity = new RestTemplate().getForEntity(
-				"http://localhost:8000/currency/retrieve/from/{from}/to/{to}", Currency.class, uriVariables);
+				"http://"+curencyManagerServiceHost+":"+curencyManagerServicePort+"/currency/retrieve/from/{from}/to/{to}", Currency.class, uriVariables);
 		Currency response = responseEntity.getBody();
 
 		Currency conversionValueObj = new Currency(response.getID(), from, to, response.getFactorValue(), quantity,
