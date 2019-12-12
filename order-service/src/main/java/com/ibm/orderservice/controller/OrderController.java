@@ -20,7 +20,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,7 +47,13 @@ public class OrderController {
 	private UserAuthServiceProxy userproxy;
 	
 	@Autowired
-	private CommonUtil util;
+	private CommonUtil commonUtil;
+	
+	@Value("${USER-AUTHENTICATION-SERVICE_SERVICE_HOST:184.173.5.222}")
+	private String userAuthenticationServiceHost;
+	
+	@Value("${USER-AUTHENTICATION-SERVICE_SERVICE_PORT:30202}")
+	private String userAuthenticationServicePort;
 	
 	@RequestMapping(value = "/updateorder/{orderid}", method = RequestMethod.PUT)
 	public @ResponseBody ResponseOrder updateorder(@RequestBody RequestOrder req, @PathVariable Long orderid) {
@@ -81,7 +87,7 @@ public class OrderController {
 		orderobj.setUsertoken(getUserToken(req.getUsername()));
 		
 		logger.info("USER TOKEN:" + orderobj.getUsertoken());
-		String transToken = util.generateTransactionToken(req.getUsername());
+		String transToken = commonUtil.generateTransactionToken(req.getUsername());
 		
 		orderobj.setTranstoken(transToken);
 		Orderdet savedOrder = repository.save(orderobj);
@@ -124,7 +130,7 @@ public class OrderController {
 		
 		logger.info("USER TOKEN:" + orderobj.getUsertoken());
 		
-		String transToken = util.generateTransactionToken(req.getUsername());
+		String transToken = commonUtil.generateTransactionToken(req.getUsername());
 		orderobj.setTranstoken(transToken);
 		Orderdet savedOrder = repository.save(orderobj);
 		logger.info("{}", savedOrder);
@@ -149,9 +155,9 @@ public class OrderController {
 		for (Orderdet orderdet : orderlist) {
 			ResponseOrder resOrder = new ResponseOrder();
 			resOrder.setOrder(orderdet);
-			if (util.validateTransactionToken(orderdet.getTranstoken(), username)) {
+			if (commonUtil.validateTransactionToken(orderdet.getTranstoken(), username)) {
 				totalAmount = totalAmount + orderdet.getAmount();
-				orderdet.setTranstoken(util.revokeToken(username));
+				orderdet.setTranstoken(commonUtil.revokeToken(username));
 				resOrder.setStatus("SUCCESS");
 				resOrder.setStatusMsg("added to bill");
 			} else {
@@ -189,7 +195,8 @@ public class OrderController {
 	public Boolean validateUserToken(@PathVariable String username) {
 		logger.info("OrderController >> validateUserToken(@PathVariable String username) -->START");
 		Boolean isValidToken = false;
-		boolean isFeignClientEnabled = true;
+		//boolean isFeignClientEnabled = true;
+		boolean isFeignClientEnabled = false;
 		if(isFeignClientEnabled) {
 			//FeignClient
 			isValidToken =  userproxy.validateUserToken(username);	
@@ -205,7 +212,8 @@ public class OrderController {
 	public String getUserToken(@PathVariable String username) {
 		logger.info("OrderController >> getUserToken(@PathVariable String username) -->START");
 		String userToken = null;
-		boolean isFeignClientEnabled = true;
+		//boolean isFeignClientEnabled = true;
+		boolean isFeignClientEnabled = false;
 		if(isFeignClientEnabled) {
 			//FeignClient
 			userToken =  userproxy.getUserToken(username);	
@@ -220,7 +228,8 @@ public class OrderController {
 	
 	private Boolean validateUserTokenFromRestTemplate(String username) {
 		logger.info("OrderController >> validateUserTokenFromRestTemplate(@PathVariable String username) -->START");
-		String url = "http://localhost:8899/validateUserToken/{username}";
+		//String url = "http://localhost:8899/validateUserToken/{username}";
+		String url = "http://"+userAuthenticationServiceHost+":"+userAuthenticationServicePort+"/validateUserToken/{username}";
 		Map<String, String> uriVariables = new HashMap<>();
 		uriVariables.put("username", username);
 		ResponseEntity<Boolean> responseEntity = new RestTemplate().getForEntity(url, Boolean.class, uriVariables);
@@ -232,7 +241,8 @@ public class OrderController {
 	
 	private String getUserTokenFromRestTemplate(String username) {
 		logger.info("OrderController >> getUserTokenFromRestTemplate(@PathVariable String username) -->START");
-		String url = "http://localhost:8899/getToken/{username}";
+		//String url = "http://localhost:8899/getToken/{username}";
+		String url = "http://"+userAuthenticationServiceHost+":"+userAuthenticationServicePort+"/getToken/{username}";
 		Map<String, String> uriVariables = new HashMap<>();
 		uriVariables.put("username", username);
 		ResponseEntity<String> responseEntity = new RestTemplate().getForEntity(url, String.class, uriVariables);
